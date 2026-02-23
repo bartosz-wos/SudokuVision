@@ -51,3 +51,5 @@ env/
 # C++ Custom
 backend_cpp/solver
 backend_cpp/build/
+venv/
+__pycache__/
