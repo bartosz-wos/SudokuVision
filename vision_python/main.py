@@ -35,14 +35,17 @@ def process_image(image_path):
 
     edges = cv2.Canny(blur, 50, 150)
 
-    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    kernel = np.ones((5,5), np.uint8)
+    edges = cv2.dilate(edges, kernel, iterations=1)
+
+    contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
     board_contour = None
 
     for c in contours:
         peri = cv2.arcLength(c, True)
-        approx = cv2.approxPolyDP(c, 0.02 * peri, True)
+        approx = cv2.approxPolyDP(c, 0.04 * peri, True)
 
         if len(approx) == 4:
             board_contour = approx
@@ -74,6 +77,47 @@ def process_image(image_path):
         M = cv2.getPerspectiveTransform(rect, dst)
         warped = cv2.warpPerspective(original, M, (maxWidth, maxHeight))
 
+        warped_gray = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
+        warped_blur = cv2.GaussianBlur(warped_gray, (5, 5), 0)
+        thresh = cv2.adaptiveThreshold(warped_blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                       cv2.THRESH_BINARY_INV, 55, 5)
+
+        cv2.imshow("4 - Whole threshold mask", thresh)
+
+        step_x = maxWidth // 9
+        step_y = maxHeight // 9
+
+        cells = []
+        for y in range(9):
+            row = []
+            for x in range(9):
+                startX = x * step_x
+                startY = y * step_y
+                endX = (x + 1) * step_x
+                endY = (y + 1) * step_y
+
+                cell = thresh[startY:endY, startX:endX]
+
+                trim_x = int(cell.shape[1] * 0.1)
+                trim_y = int(cell.shape[0] * 0.1)
+                if cell.shape[0] > trim_y * 2 and cell.shape[1] > trim_x * 2:
+                    cell = cell[trim_y:cell.shape[0]-trim_y, trim_x:cell.shape[1]-trim_x]
+
+                cell_contours, _ = cv2.findContours(cell, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                cell_area = cell.shape[0] * cell.shape[1]
+
+                for cc in cell_contours:
+                    area = cv2.contourArea(cc)
+                    if area < cell_area * 0.04:
+                        cv2.drawContours(cell, [cc], -1, 0, -1)
+
+                row.append(cell)
+
+            cells.append(row)
+
+        cv2.imshow("Cell [2][0] (EMPTY)", cells[2][0])
+        cv2.imshow("Cell [1][1] (9)", cells[1][1])
+
         cv2.imshow("3 - Straightened board", warped)
     else:
         print("[-] Error: Couldn't find the contours.")
@@ -86,4 +130,4 @@ def process_image(image_path):
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    process_image('../data/test1.png')
+    process_image('../data/test3.png')
