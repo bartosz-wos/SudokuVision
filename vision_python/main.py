@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+import joblib
+from sklearn.svm import SVC
 
 def order_points(pts):
     rect = np.zeros((4,2), dtype="float32")
@@ -20,6 +22,14 @@ def process_image(image_path):
 
     if img is None:
         print(f"[!] Error: Couldn't load the image.")
+        return
+
+    print("[*] Loading the SVM model...")
+
+    try:
+        model = joblib.load('svm_model.pkl')
+    except Exception as e:
+        print("[!] svm_model.pkl not found! Run train_model.py first!")
         return
 
     height, width = img.shape[:2]
@@ -80,14 +90,14 @@ def process_image(image_path):
         warped_gray = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
         warped_blur = cv2.GaussianBlur(warped_gray, (5, 5), 0)
         thresh = cv2.adaptiveThreshold(warped_blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                       cv2.THRESH_BINARY_INV, 55, 5)
+                                       cv2.THRESH_BINARY_INV, 55, 45)
 
         cv2.imshow("4 - Whole threshold mask", thresh)
 
         step_x = maxWidth // 9
         step_y = maxHeight // 9
 
-        cells = []
+        sudoku_grid = []
         for y in range(9):
             row = []
             for x in range(9):
@@ -106,24 +116,43 @@ def process_image(image_path):
                 cell_contours, _ = cv2.findContours(cell, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 cell_area = cell.shape[0] * cell.shape[1]
 
-                for cc in cell_contours:
-                    area = cv2.contourArea(cc)
-                    if area < cell_area * 0.04:
-                        cv2.drawContours(cell, [cc], -1, 0, -1)
+                if len(cell_contours) > 0:
+                    largest_contour = max(cell_contours, key=cv2.contourArea)
 
-                row.append(cell)
+                    for cc in cell_contours:
+                        if cc is not largest_contour:
+                            cv2.drawContours(cell, [cc], -1, 0, -1)
 
-            cells.append(row)
+                    cell_h = cell.shape[0]
+                    x_c, y_c, w_c, h_c = cv2.boundingRect(largest_contour)
+                    
+                    if h_c < cell_h * 0.45:
+                        cell.fill(0)
 
-        cv2.imshow("Cell [2][0] (EMPTY)", cells[2][0])
-        cv2.imshow("Cell [1][1] (9)", cells[1][1])
+                non_zero = cv2.findNonZero(cell)
+                if non_zero is not None:
+                    x_b, y_b, w_b, h_b = cv2.boundingRect(non_zero)
+
+                    if w_b > 5 and h_b > 10:
+                        digit_roi = cell[y_b:y_b+h_b, x_b:x_b+w_b]
+                        resized_digit = cv2.resize(digit_roi, (28, 28), interpolation=cv2.INTER_AREA)
+
+                        flattened = resized_digit.flatten().reshape(1, -1)
+                        prediction = model.predict(flattened)[0]
+                        row.append(int(prediction))
+                    else:
+                        row.append(0)
+                else:
+                    row.append(0)
+
+            sudoku_grid.append(row)
+
+        for r in sudoku_grid:
+            print(r)
 
         cv2.imshow("3 - Straightened board", warped)
     else:
         print("[-] Error: Couldn't find the contours.")
-
-    cv2.imshow("1 - Contours (Canny)", edges)
-    cv2.imshow("2 - Board detection", img)
 
     print("[*] Press any key to exit...")
     cv2.waitKey(0)
