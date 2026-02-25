@@ -1,3 +1,4 @@
+import sys
 import cv2
 import numpy as np
 import joblib
@@ -27,7 +28,7 @@ def process_image(image_path):
     print("[*] Loading the SVM model...")
 
     try:
-        model = joblib.load('svm_model.pkl')
+        model = joblib.load('vision_python/svm_model.pkl')
     except Exception as e:
         print("[!] svm_model.pkl not found! Run train_model.py first!")
         return
@@ -87,12 +88,12 @@ def process_image(image_path):
         M = cv2.getPerspectiveTransform(rect, dst)
         warped = cv2.warpPerspective(original, M, (maxWidth, maxHeight))
 
+        cv2.imwrite("data/warped_board.png", warped)
+
         warped_gray = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
         warped_blur = cv2.GaussianBlur(warped_gray, (5, 5), 0)
         thresh = cv2.adaptiveThreshold(warped_blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                        cv2.THRESH_BINARY_INV, 55, 45)
-
-        cv2.imshow("4 - Whole threshold mask", thresh)
 
         step_x = maxWidth // 9
         step_y = maxHeight // 9
@@ -133,9 +134,17 @@ def process_image(image_path):
                 if non_zero is not None:
                     x_b, y_b, w_b, h_b = cv2.boundingRect(non_zero)
 
-                    if w_b > 5 and h_b > 10:
+                    cell_h, cell_w = cell.shape
+
+                    if h_b > cell_h * 0.35 and w_b > 2:
                         digit_roi = cell[y_b:y_b+h_b, x_b:x_b+w_b]
-                        resized_digit = cv2.resize(digit_roi, (28, 28), interpolation=cv2.INTER_AREA)
+
+                        padding = 4
+                        padded_digit = cv2.copyMakeBorder(digit_roi, padding, padding, padding, padding, cv2.BORDER_CONSTANT, value=0)
+
+                        resized_digit = cv2.resize(digit_roi, (28, 28), interpolation=cv2.INTER_CUBIC)
+                        
+                        _, resized_digit = cv2.threshold(resized_digit, 127, 255, cv2.THRESH_BINARY)
 
                         flattened = resized_digit.flatten().reshape(1, -1)
                         prediction = model.predict(flattened)[0]
@@ -147,16 +156,18 @@ def process_image(image_path):
 
             sudoku_grid.append(row)
 
-        for r in sudoku_grid:
-            print(r)
-
-        cv2.imshow("3 - Straightened board", warped)
+        with open("data/board.txt", "w") as f:
+            for r in sudoku_grid:
+                print(r)
+                line = " ".join(str(x) for x in r)
+                f.write(line + "\n")
     else:
         print("[-] Error: Couldn't find the contours.")
 
-    print("[*] Press any key to exit...")
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
 if __name__ == "__main__":
-    process_image('../data/test3.png')
+    if len(sys.argv) < 2:
+        print("[!] Error: Provide the path to the image!")
+        sys.exit(1)
+
+    image_path = sys.argv[1]
+    process_image(image_path)
