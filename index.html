@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>SudokuVision Cloud</title>
+	<style>
+		body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #0f0f0f; color: #e0e0e0; padding-top: 50px; }
+		.container { max-width: 600px; margin: auto; padding: 30px; border: 1px solid #222; border-radius: 15px; background: #1a1a1a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+		h1 { color: #00ff88; margin-bottom: 10px; }
+		p { color: #888; margin-bottom: 30px; }
+		input[type="file"] { margin: 20px 0; padding: 10px; border: 1px dashed #444; width: 80%; border-radius: 5px; }
+		button { background: #00ff88; color: #000; border: none; padding: 15px 30px; cursor: pointer; font-weight: bold; font-size: 1rem; border-radius: 5px; transition: 0.3s; }
+		button:hover { background: #00cc6e; transform: scale(1.05); }
+		button:disabled { background: #333; color: #667; cursor: not-allowed; }
+		#resultContainer { margin-top: 30px; display: none; }
+		img { max-width: 100%; border-radius: 10px; border: 2px solid #00ff88; }
+		.footer { margin-top: 40px; font-size: 0.8rem; color: #444; }
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>Sudoku Vision</h1>
+		<p>Upload a Sudoku photo and get the solution instantly.</p>
+
+		<input type="file" id="imageInput" accept="image/*">
+		<br>
+		<button id="solveBtn" onclick="solve()">SOLVE SUDOKU</button>
+
+		<div id="resultContainer">
+			<h3>Solution:</h3>
+			<img id="resultImage" alt="Solved Sudoku">
+		</div>
+	</div>
+
+	<div class="footer">
+		Powered by C++ DLX (Algorithm X with Dancing Links) & FastAPI | SudokuVision 2026
+	</div>
+
+	<script>
+		async function solve(){
+			const input = document.getElementById('imageInput');
+			const btn = document.getElementById('solveBtn');
+			const resultContainer = document.getElementById('resultContainer');
+			const resultImg = document.getElementById('resultImage');
+
+			if(!input.files[0]) return alert("Please select an image first!");
+
+			const formData = new FormData();
+			formData.append('file', input.files[0]);
+
+			btn.innerText = "PROCESSING...";
+			btn.disabled = true;
+			resultContainer.style.display = 'none';
+
+			try{
+				const response = await fetch('/solve', { method: 'POST', body: formData });
+
+				if(!response.ok) throw new Error("Solver failed.");
+
+				const blob = await response.blob();
+				const url = URL.createObjectURL(blob);
+
+				resultImg.src = url;
+				resultContainer.style.display = 'block';
+			}catch(error){
+				alert("Error: " + error.message);
+			}finally{
+				btn.innerText = "SOLVE SUDOKU";
+				btn.disabled = false;
+			}
+		}
+	</script>
+</body>
+</html>

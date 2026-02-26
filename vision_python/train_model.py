@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 from sklearn.svm import SVC
@@ -40,4 +41,7 @@ if __name__ == "__main__":
     model = SVC(kernel='linear', C=1.0)
     model.fit(X,y)
     
-    joblib.dump(model, 'svm_model.pkl')
+    base_path = os.path.dirname(__file__)
+    model_path = os.path.join(base_path, 'svm_model.pkl')
+
+    joblib.dump(model, model_path)
