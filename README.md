@@ -1,30 +1,52 @@
-# SudokuVision (Pipeline that solves Sudoku with Computer Vision and Knuth's DLX with Dancing Links)
+# SudokuVision
+
+**Live Demo:** (https://sudokuvision-yezh.onrender.com/)
+*(Note: Hosted on Render's free tier, it might take 30-50 seconds to spin up after a period of inactivity)*
+
+## Overview
+SudokuVision is a complete E2E cloud-ready pipeline that solves sudoku puzzles straight from images.
+It started as a local bash script, now it is a fully dockerized REST API with responsive Web UI, powered by a very fast C++ backend and a Python based computer vision module.
+
+## Tech Overview
+- Frontend: HTML, CSS, Vanilla JS
+- Backend API: Python, FastAPI, Uvicorn
+- CV and ML: OpenCV, scikit-learn (SVM digit classifier)
+- Core Solver: C++ (Knuth's Algorithm X with Dancing Links)
+- Infrastructure: Docker, Render (for cloud hosting)
 
 ## How it works
-SudokuVision is a pipeline designed to solve Sudoku puzzles from images. It uses Computer Vision techniques, Machine Learning (SVM), and optimized C++ backend.
-
-Invidual modules do one thing and are run by a bash script in sequence.
-
-## Architecture
-
-1. **Computer Vision & ML (Python/OpenCV/scikit-learn)**
-   - **Perspective Transform** Detects the Sudoku grid and warps the image.
-   - **Cell Extraction & SVM** A custom-trained Support Vector Machine Digit Classificator
-   - Outputs A standardized `board.txt` matrix.
-
-2. **Solver with DLX**
-   - **Algorithm X with Dancing Links** Exact cover algorithm implemented in C++ for speed.
-   - Input: `board.txt` -> Output: `solved_board.txt`.
-
-3. **Rendering (Python / OpenCV)**
-   - Puts the computed sudoku board onto the original perspective-warped image.
-   - Outputs `final_result.png`.
+1. **Interface:** The user uploads a Sudoku image via a browser
+2. **API Layer:** FastAPI receives the image asynchronously and runs the pipeline
+3. **Vision Module:** OpenCV applies perspective transform and extracts 81 cells. SVM model classifies the digits, generating a matrix
+4. **C++ DLX Engine:** The matrix is passed to the C++ executable, which solves the exact cover problem very fast
+5. **Rendering:** The solved digits are overlaid onto the original warped image and sent back to the client via the API
 
 ## Structure
 ```text
 .
-├── backend_cpp/        # DLX Engine in C++ and Makefile
-├── vision_python/      # Computer Vision, SVM Model and Rendering
-├── data/               # Test inputs intermediate txt files and outputs
-├── solve.sh            # Pipeline bash script
+├── backend_cpp/        # DLX Engine in C++
+├── vision_python/      # Computer Vision, SVM Model and processing
+├── data/               # Temporary storage for processing
+├── server.py           # REST API implementation in FastAPI
+├── index.html          # Web UI
+├── Dockerfile          # Containerization instructions
+├── solve.sh            # CLI bash script for local execution
 └── README.md           # Readme file
+```
+
+## Running Locally
+You can run the exact same environment as the production server using Docker:
+```bash
+docker build -t sudokuvision .
+docker run -p 8000:8000 sudokuvision
+```
+Then open `http://localhost:8000` in your browser
+
+## The CLI Way
+If you prefer to use it in terminal without the Web UI:
+```bash
+chmod +x solve.sh
+./solve.sh path-to-your-image.png
+```
+And check the `data/` folder for the `final_result.png`.
+
