@@ -1,7 +1,7 @@
 import os
 import subprocess
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="SudokuVision API")
@@ -18,6 +18,14 @@ DATA_DIR = "data"
 TEMP_INPUT = os.path.join(DATA_DIR, "temp_input.png")
 FINAL_OUTPUT = os.path.join(DATA_DIR, "final_result.png")
 SOLVER_EXEC = "./backend_cpp/build/solver"
+
+@app.get("/", response_class=HTMLResponse)
+async def read_index():
+    try:
+        with open("index.html", "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        return f"Error loading UI: {str(e)}"
 
 @app.post("/solve")
 async def solve_sudoku(file: UploadFile = File(...)):
