@@ -109,8 +109,8 @@ def process_image(image_path):
 
                 cell = thresh[startY:endY, startX:endX]
 
-                trim_x = int(cell.shape[1] * 0.1)
-                trim_y = int(cell.shape[0] * 0.1)
+                trim_x = int(cell.shape[1] * 0.15)
+                trim_y = int(cell.shape[0] * 0.15)
                 if cell.shape[0] > trim_y * 2 and cell.shape[1] > trim_x * 2:
                     cell = cell[trim_y:cell.shape[0]-trim_y, trim_x:cell.shape[1]-trim_x]
 
@@ -139,11 +139,7 @@ def process_image(image_path):
                     if h_b > cell_h * 0.35 and w_b > 2:
                         digit_roi = cell[y_b:y_b+h_b, x_b:x_b+w_b]
 
-                        padding = 4
-                        padded_digit = cv2.copyMakeBorder(digit_roi, padding, padding, padding, padding, cv2.BORDER_CONSTANT, value=0)
-
-                        resized_digit = cv2.resize(digit_roi, (28, 28), interpolation=cv2.INTER_CUBIC)
-                        
+                        resized_digit = cv2.resize(digit_roi, (28, 28), interpolation=cv2.INTER_AREA)
                         _, resized_digit = cv2.threshold(resized_digit, 127, 255, cv2.THRESH_BINARY)
 
                         flattened = resized_digit.flatten().reshape(1, -1)
