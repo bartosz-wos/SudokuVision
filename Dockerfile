@@ -28,6 +28,7 @@ RUN chmod +x ./backend_cpp/build/solver
 
 COPY vision_python/ ./vision_python/
 COPY server.py .
+COPY index.html .
 
 RUN cd vision_python && python train_model.py
 
