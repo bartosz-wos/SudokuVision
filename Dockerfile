@@ -29,7 +29,7 @@ RUN chmod +x ./backend_cpp/build/solver
 COPY vision_python/ ./vision_python/
 COPY server.py .
 
-RUN python vision_python/train_model.py
+RUN cd vision_python && python train_model.py
 
 RUN mkdir -p data
 
