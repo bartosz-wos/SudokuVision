@@ -6,6 +6,9 @@ WORKDIR /app
 COPY backend_cpp/ ./backend_cpp/
 
 WORKDIR /app/backend_cpp
+
+RUN mkdir -p build
+
 RUN make
 
 # python runner
