@@ -10,7 +10,7 @@ It started as a local bash script, now it is a fully dockerized REST API with re
 ## Tech Overview
 - Frontend: HTML, CSS, Vanilla JS
 - Backend API: Python, FastAPI, Uvicorn
-- CV and ML: OpenCV, scikit-learn (SVM digit classifier)
+- CV and ML: OpenCV (opencv-python-headless), scikit-learn (SVM digit classifier)
 - Core Solver: C++ (Knuth's Algorithm X with Dancing Links)
 - Infrastructure: Docker, Render (for cloud hosting)
 
@@ -24,13 +24,13 @@ It started as a local bash script, now it is a fully dockerized REST API with re
 ## Structure
 ```text
 .
-├── backend_cpp/        # DLX Engine in C++
-├── vision_python/      # Computer Vision, SVM Model and processing
+├── backend/            # DLX Engine in C++
+├── core/               # Computer Vision, SVM Model and processing
 ├── data/               # Temporary storage for processing
-├── server.py           # REST API implementation in FastAPI
-├── index.html          # Web UI
+├── scripts/            # bash scripts for local execution
+├── web/                # REST API (server.py) and Web UI (index.html)
 ├── Dockerfile          # Containerization instructions
-├── solve.sh            # CLI bash script for local execution
+├── requirements.txt    # Python dependencies
 └── README.md           # Readme file
 ```
 
@@ -45,8 +45,8 @@ Then open `http://localhost:8000` in your browser
 ## The CLI Way
 If you prefer to use it in terminal without the Web UI:
 ```bash
-chmod +x solve.sh
-./solve.sh path-to-your-image.png
+chmod +x scripts/solve.sh
+./scripts/solve.sh path-to-your-image.png
 ```
 And check the `data/` folder for the `final_result.png`.
 
