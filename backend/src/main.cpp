@@ -58,8 +58,12 @@ void build_sudoku_matrix(DLX& engine, const std::vector<std::vector<int>>& board
 	}
 }
 
-int main(){
-	std::ifstream file("data/board.txt");
+int main(int argc, char* argv[]){
+	if(argc < 3){
+		std::cerr << "\033[1;31m[!] Usage: " << argv[0] << " <input_board.txt> <output_board.txt>\033[0m" << std::endl;
+		return 1;
+	}
+	std::ifstream file(argv[1]);
 	if(!file.is_open()){
 		std::cerr << "\033[1;31m[!] Error: Couldn't find file data/board.txt\033[0m" << std::endl;
 		return 1;

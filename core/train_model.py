@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import cv2
 import numpy as np
 from sklearn.svm import SVC
@@ -41,7 +42,7 @@ if __name__ == "__main__":
     model = SVC(kernel='linear', C=1.0)
     model.fit(X,y)
     
-    base_path = os.path.dirname(__file__)
-    model_path = os.path.join(base_path, 'svm_model.pkl')
-
-    joblib.dump(model, model_path)
+    BASE_DIR = Path(__file__).resolve().parent
+    MODEL_PATH = BASE_DIR / "models" / "svm_model.pkl"
+    MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(model, str(MODEL_PATH))

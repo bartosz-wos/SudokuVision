@@ -1,6 +1,17 @@
 import cv2
 import sys
+from pathlib import Path
 import numpy as np
+
+BASE_DIR = Path(__file__).resolve().parent
+ROOT_DIR = BASE_DIR.parent
+
+MODEL_PATH = BASE_DIR / "models" / "svm_model.pkl"
+DATA_DIR = ROOT_DIR / "data"
+BOARD_DIR = DATA_DIR / "board.txt"
+SOLVED_BOARD_DIR = DATA_DIR / "solved_board.txt"
+WARPED_BOARD_DIR = DATA_DIR / "warped_board.png"
+FINAL_RESULT_DIR = DATA_DIR / "final_result.png"
 
 def load_board(file_path):
     board = []
@@ -13,13 +24,13 @@ def load_board(file_path):
 
 def main():
     try:
-        original_board = load_board("data/board.txt")
-        solved_board = load_board("data/solved_board.txt")
+        original_board = load_board(str(BOARD_DIR))
+        solved_board = load_board(str(SOLVED_BOARD_DIR))
     except Exception as e:
         print(f"[-] Error: Cannot load board text files.")
         sys.exit(1)
 
-    img = cv2.imread("data/warped_board.png")
+    img = cv2.imread(str(WARPED_BOARD_DIR))
     if img is None:
         print("[-] Error: Cannot load warped image.")
         sys.exit(1)
@@ -44,7 +55,7 @@ def main():
 
                 cv2.putText(img, digit, (text_x, text_y), font, font_scale, color, thickness)
 
-    output_path = "data/final_result.png"
+    output_path = str(FINAL_RESULT_DIR)
     cv2.imwrite(output_path, img)
     print(f"[+] Final solution rendered and saved to {output_path}!")
 

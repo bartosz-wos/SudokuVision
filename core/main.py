@@ -1,8 +1,17 @@
 import sys
+from pathlib import Path
 import cv2
 import numpy as np
 import joblib
 from sklearn.svm import SVC
+
+BASE_DIR = Path(__file__).resolve().parent
+ROOT_DIR = BASE_DIR.parent
+
+MODEL_PATH = BASE_DIR / "models" / "svm_model.pkl"
+DATA_DIR = ROOT_DIR / "data"
+WARPED_BOARD_DIR = DATA_DIR / "warped_board.png"
+BOARD_DIR = DATA_DIR / "board.txt"
 
 def order_points(pts):
     rect = np.zeros((4,2), dtype="float32")
@@ -28,7 +37,7 @@ def process_image(image_path):
     print("[*] Loading the SVM model...")
 
     try:
-        model = joblib.load('vision_python/svm_model.pkl')
+        model = joblib.load(str(MODEL_PATH))
     except Exception as e:
         print("[!] svm_model.pkl not found! Run train_model.py first!")
         return
@@ -88,7 +97,7 @@ def process_image(image_path):
         M = cv2.getPerspectiveTransform(rect, dst)
         warped = cv2.warpPerspective(original, M, (maxWidth, maxHeight))
 
-        cv2.imwrite("data/warped_board.png", warped)
+        cv2.imwrite(str(WARPED_BOARD_DIR), warped)
 
         warped_gray = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
         warped_blur = cv2.GaussianBlur(warped_gray, (5, 5), 0)
@@ -152,7 +161,7 @@ def process_image(image_path):
 
             sudoku_grid.append(row)
 
-        with open("data/board.txt", "w") as f:
+        with open(str(BOARD_DIR), "w") as f:
             for r in sudoku_grid:
                 print(r)
                 line = " ".join(str(x) for x in r)

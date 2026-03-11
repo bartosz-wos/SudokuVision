@@ -1,39 +1,28 @@
-# C++ builder
 FROM gcc:12 AS builder
-
 WORKDIR /app
+COPY backend/ ./backend/
+RUN make -C backend
 
-COPY backend_cpp/ ./backend_cpp/
-
-WORKDIR /app/backend_cpp
-
-RUN mkdir -p build
-
-RUN make
-
-# python runner
 FROM python:3.11-slim
-
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-	libgomp1 \ 
-	&& rm -rf /var/lib/apt/lists/*
+    libgomp1 libgl1 libglib2.0-0 \ 
+    && rm -rf /var/lib/apt/lists/*
 
-COPY vision_python/requirements.txt ./vision_python/
-RUN pip install --no-cache-dir -r vision_python/requirements.txt
+COPY core/requirements.txt ./core/
+RUN pip install --no-cache-dir -r core/requirements.txt
 
-COPY --from=builder /app/backend_cpp/build/solver ./backend_cpp/build/solver
-RUN chmod +x ./backend_cpp/build/solver
+COPY --from=builder /app/backend/build/solver ./backend/build/solver
+RUN chmod +x ./backend/build/solver
 
-COPY vision_python/ ./vision_python/
-COPY server.py .
-COPY index.html .
-
-RUN cd vision_python && python train_model.py
+COPY core/ ./core/
+COPY web/ ./web/
+COPY scripts/ ./scripts/
 
 RUN mkdir -p data
+RUN cd core && python train_model.py
 
 EXPOSE 8000
 
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "web.server:app", "--host", "0.0.0.0", "--port", "8000"]
