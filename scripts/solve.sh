@@ -1,7 +1,7 @@
 #!/bin/bash
 
-SCRIPT_DIR = "$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-ROOT_DIR = "$(dirname "$SCRIPT_DIR")"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
 if [ "$#" -ne 1 ]; then
 	echo -e "\033[1;31m[!] Error: Input path to the Sudoku image!\033[0m"
@@ -13,7 +13,7 @@ IMAGE_PATH=$1
 
 echo -e "\033[1;34m[*] Running the Vision Module...\033[0m"
 
-source vision_python/venv/bin/activate
+source "$ROOT_DIR/venv/bin/activate"
 python "$ROOT_DIR/core/main.py" "$IMAGE_PATH"
 
 PYTHON_STATUS=$?
@@ -34,7 +34,7 @@ SOLVER_STATUS=$?
 if [ $SOLVER_STATUS -eq 0 ]; then
 	echo -e "\033[1;33m[*] Rendering the final image...\033[0m"
 	
-	source vision_python/venv/bin/activate
+	source "$ROOT_DIR/venv/bin/activate"
 	python "$ROOT_DIR/core/render.py"
 	deactivate
 
